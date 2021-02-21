@@ -176,7 +176,12 @@ public:
     void Run() {
         std::fstream fin("input.txt");
         List list;
+        if (!fin.is_open()) {
+            std::cout << "File is not opened\n";
+            std::exit(11);
+        }
         fin >> list;
+        fin.close();
         std::cout << "Enter minimum course\n";
         int min_course;
         std::cin >> min_course;
