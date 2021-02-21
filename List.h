@@ -118,6 +118,7 @@ public:
     }
 
     void FilterByCourse(const int &minCourse) {
+        if (minCourse == 1) return;
         auto newEnd = std::remove_if(list.begin(), list.end(),
                                      [&minCourse](const std::shared_ptr<Participant> &item) {
                                          return item->course < minCourse;
