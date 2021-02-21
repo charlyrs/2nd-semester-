@@ -6,153 +6,197 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <functional>
 #include <sstream>
+#include <set>
 #include <iterator>
-
+#include <unordered_set>
 #include <fstream>
-
 #include <regex>
 
-enum status {
-    STUDENT = 0, MAGISTRANT
-};
 
-class Participant {
+struct Participant {
     std::string surname;
-    std::string name_and_middlename;
+    std::string name;
+    std::string middle_name;
     std::string status;
     int course;
     std::string id;
-public:
-    Participant(std::string sn, std::string n, std::string st, int c, std::string id) {
-        surname = sn;
-        name_and_middlename = n;
-        status = st;
-        course = c;
-        this->id = id;
-    }
 
     Participant() {
         surname = " ";
-        name_and_middlename = " ";
+        name = " ";
+        middle_name = " ";
         status = " ";
         course = 0;
         id = " ";
     }
 
-    Participant &operator=(const Participant &other) {
-        if (this == &other) return *this;
-        surname = other.surname;
-        name_and_middlename = other.name_and_middlename;
-        status = other.status;
-        course = other.course;
-        id = other.id;
-        return *this;
+    std::string NameAndMiddleName() const {
+        return name + " " + middle_name;
     }
 
-    std::string Surname() const { return surname; }
+    std::string FullName() const {
+        return surname + " " + name + " " + middle_name;
+    };
 
-    std::string Name() const { return surname + " " + name_and_middlename; }
+    std::string Info() const {
+        return surname + " " + name + " " + middle_name + " student " + std::to_string(course) + " kursa " + id;
+    }
 
-    int Course() const { return course; }
+    friend std::ostream &operator<<(std::ostream &out, const std::shared_ptr<Participant> &a) {
+        out << a->Info();
+        return out;
+    }
 
-    std::string ID() const { return id; }
+    friend std::ostream &operator<<(std::ostream &out, const Participant &a) {
+        out << a.Info();
+        return out;
+    }
 
-    std::string Status() const { return status; }
+
 };
 
-typedef std::vector<std::shared_ptr<std::string>> container;
-typedef std::vector<std::string> vector;
-std::ostream& Output(std::ostream& out, std::shared_ptr<std::string> item){
-    out << *item;
-    return out;
-}
+
+struct Compare {
+    bool operator()(const std::shared_ptr<Participant> &first, const std::shared_ptr<Participant> &second) const {
+        return first->FullName() == second->FullName();
+    }
+};
+
+struct Hash {
+    std::size_t operator()(std::shared_ptr<Participant> const &a) const noexcept {
+        size_t hash = 0;
+        for (auto x : a->FullName()) {
+            hash += x;
+        }
+        return hash;
+    }
+};
 
 class List {
 private:
-    container list;
+
+
+    std::vector<std::shared_ptr<Participant>> list;
+
 
     static void FixLine(std::string &line) {
         std::regex expr(
-                "([a-zA-Z\\']+)(\\d+)([a-zA-Z\\']+)(\\d+)([a-zA-Z\\']+)(\\d+)(\\D+)(\\d+)(\\d)(\\D+)(\\d+)(\\d{8})");
-        std::regex_constants::match_flag_type flag = {};
-        line = std::regex_replace(line, expr, "$1 $3 $5 $7 $9 kursa $12", flag);
+                R"(([a-zA-Z\']+)(\d+)([a-zA-Z\']+)(\d+)([a-zA-Z\']+)(\d+)(\D+)(\d+)(\d)(\D+)(\d+)(\d{8}))");
+
+        if (!std::regex_match(line, expr)) throw std::invalid_argument("Not a participant");
+        //std::regex_constants::match_flag_type flag = {};
+        line = std::regex_replace(line, expr, "$1 $3 $5 $7 $9 kursa $12");
+
     }
 
+    static void FixLines(std::vector<std::string> &l) {
+        for (auto &x : l) {
+            FixLine(x);
+        }
+    }
+
+
 public:
-    Participant ToParticipant(std::string line) const {
+    static Participant ToParticipant(const std::string &line) {
+        Participant participant;
         std::stringstream ss;
         ss << line;
-        std::string surname;
-        ss >> surname;
-        std::string othername;
-        ss >> othername;
-        std::string temp;
-        ss >> temp;
-        othername += " ";
-        othername += temp;
-        std::string status;
-        ss >> status;
-        int course;
-        ss >> course;
-        std::string id;
-        ss >> id;
-        ss >> id;
-        return Participant(surname, othername, status, course, id);
+        ss >> participant.surname >> participant.name >> participant.middle_name >>
+           participant.status >> participant.course;
+        ss >> participant.id;
+        ss >> participant.id;
+        return participant;
     }
 
-public:
-
     friend std::istream &operator>>(std::istream &input, List &a) {
-        vector temp;
+        std::vector<std::string> temp;
         std::copy(
                 std::istream_iterator<std::string, char>(input),
                 std::istream_iterator<std::string, char>(),
                 std::back_inserter(temp));
+        FixLines(temp);
         for (auto x : temp) {
-            a.list.push_back(std::make_shared<std::string>(x));
+            a.list.push_back(std::make_shared<Participant>(ToParticipant(x)));
         }
-        a.FixLines();
         return input;
     }
 
-    void FixLines() {
-        for (auto &x : list) {
-            FixLine(*x);
-        }
+    void FilterByCourse(const int &minCourse) {
+        auto newEnd = std::remove_if(list.begin(), list.end(),
+                                     [&minCourse](const std::shared_ptr<Participant> &item) {
+                                         return item->course < minCourse;
+                                     });
+        list.erase(newEnd, list.end());
     }
 
-    void FilterByCourse(int minCourse) {
-        auto newEnd = std::remove_if(list.begin(), list.end(), [&minCourse, this](const std::shared_ptr<std::string> &item) {
-            Participant temp;
-            temp = ToParticipant(*item);
-            return temp.Course() < minCourse;
-        });
-        list.erase(newEnd,list.end());
-    }
-    void Sort(){
-        std::sort(list.begin(), list.end(),[this](const std::shared_ptr<std::string> &item1, const std::shared_ptr<std::string> &item2){
-            auto first = ToParticipant(*item1);
-            auto second = ToParticipant(*item2);
-            if(first.Surname()==second.Surname()){
-                return first.Name()<second.Name();
-            }
-            return first.Surname()<second.Surname();
-        });
+    void Sort() {
+        std::sort(list.begin(), list.end(),
+                  [](const std::shared_ptr<Participant> &first, const std::shared_ptr<Participant> &second) {
+                      if (first->surname == second->surname) {
+                          return first->NameAndMiddleName() < second->NameAndMiddleName();
+                      }
+                      return first->surname < second->surname;
+                  });
     }
 
+    // I have used it for testing my program
     std::vector<std::string> ToVector() const {
         std::vector<std::string> result;
         for (auto x : list) {
-            result.push_back(*x);
+            result.push_back(x->Info());
         }
         return result;
     }
 
-    void ToConcole(){
-        typename std::iterator_traits<std::shared_ptr<std::string>> it;
+    void ToConcole() {
+//        std::ostream_iterator<Participant> it(std::cout,"\n");
+//        std::transform(list.begin(),list.end(),it,
+//                       [](std::shared_ptr<Participant> item){return *item;});
 
-        std::copy ( list.begin(), list.end(),std::ostream_iterator<std::shared_ptr<std::string>,char> (Output(std::cout),"\n") );
+//        works the same way
+        std::copy(list.begin(), list.end(),
+                  std::ostream_iterator<std::shared_ptr<Participant>>(std::cout, "\n"));
     }
 
+
+    auto ToSet() {
+
+        std::unordered_set<std::shared_ptr<Participant>, Hash, Compare> set;
+        for (auto x : list) {
+            set.insert(x);
+        }
+        return set;
+    }
+};
+
+class Program {
+public:
+    void Run() {
+        std::fstream fin("input.txt");
+        List list;
+        fin >> list;
+        std::cout << "Enter minimum course\n";
+        int min_course;
+        std::cin >> min_course;
+        if (min_course < 1 || min_course > 4) throw std::invalid_argument("Wrong input");
+        list.FilterByCourse(min_course);
+        list.Sort();
+        list.ToConcole();
+        auto set = list.ToSet();
+        std::string temp;
+        while (getline(std::cin, temp)) {
+            if (temp == "end") break;
+            auto it = set.find(std::make_shared<Participant>(list.ToParticipant(temp)));
+            if (it == set.end()) {
+                std::cout << "There is no such person in the list\n";
+                continue;
+            }
+            std::cout << (*it)->id << '\n';
+
+        }
+
+
+    }
 };
