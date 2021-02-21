@@ -53,10 +53,7 @@ struct Participant {
         out << a.Info();
         return out;
     }
-
-
 };
-
 
 struct Compare {
     bool operator()(const std::shared_ptr<Participant> &first, const std::shared_ptr<Participant> &second) const {
@@ -77,9 +74,7 @@ struct Hash {
 class List {
 private:
 
-
     std::vector<std::shared_ptr<Participant>> list;
-
 
     static void FixLine(std::string &line) {
         std::regex expr(
@@ -96,7 +91,6 @@ private:
             FixLine(x);
         }
     }
-
 
 public:
     static Participant ToParticipant(const std::string &line) {
@@ -160,9 +154,7 @@ public:
                   std::ostream_iterator<std::shared_ptr<Participant>>(std::cout, "\n"));
     }
 
-
     auto ToSet() {
-
         std::unordered_set<std::shared_ptr<Participant>, Hash, Compare> set;
         for (auto x : list) {
             set.insert(x);
@@ -194,6 +186,8 @@ public:
         while (getline(std::cin, temp)) {
             if (temp == "end") break;
             auto it = set.find(std::make_shared<Participant>(list.ToParticipant(temp)));
+            //I've changed Compare and Hash so that they use only full name to get the result
+            //so .find() works properly with "full_name" provided
             if (it == set.end()) {
                 std::cout << "There is no such person in the list\n";
                 continue;
