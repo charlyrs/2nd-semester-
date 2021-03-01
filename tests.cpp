@@ -76,6 +76,7 @@ TEST(Check, A) { // проверка разного округления
     EXPECT_EQ(Calculate(2, 8, 3, 1), -2);  // -1,83
     EXPECT_EQ(Calculate(13, -12, 10, 16), 5); // 4,666
     EXPECT_EQ(Calculate(10, 12, 30, 16), -7); // -7,4
+    EXPECT_EQ(Calculate(2,0,-5,0),1); // 0,83
     EXPECT_EQ(Calculate(100,0,2,0),0);
 }
 TEST (Check, B){ // до ближайшего четного, когда половина
