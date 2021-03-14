@@ -34,13 +34,6 @@ bool Triangle (int a, int b, int c){
     return result;
 }
 
-
-
-
-
-
-
-
 int main() {
      int result[3];
     result[0] = 0;
@@ -55,7 +48,6 @@ int main() {
         std::cin >> b[i];
     }
     
-   
     __asm {
         mov edi, a
         mov esi, b
@@ -65,7 +57,6 @@ int main() {
         cmp ecx, n
             je _end
             mov ebx, dword ptr[edi]
-            
             mov eax, dword ptr[esi]
             
             imul ebx
@@ -78,7 +69,6 @@ int main() {
             inc ecx
             jmp _begin
             _end :
-
     }
 
     return 0;
