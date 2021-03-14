@@ -42,49 +42,44 @@ bool Triangle (int a, int b, int c){
 
 
 int main() {
-    int res;
-    int result[]={0,0,0};
-    int n;
+     int result[3];
+    result[0] = 0;
+    result[1] = 0;
+    result[2] = 0;
+    int n=1;
     std::cin >> n;
     int* a = new int[n];
     int* b = new int[n];
-    a[0]=1;
-    a[1]=2;
-    a[2]=3;
-    b[0]=1;
-    b[1]=2;
-    b[2]=3;
-
-    __asm{
-        lea edi, a
-        lea esi, b
-        mov ecx,0
+    for (int i = 0; i < n; ++i) {
+        std::cin >> a[i];
+        std::cin >> b[i];
+    }
+    
+   
+    __asm {
+        mov edi, a
+        mov esi, b
+        mov ecx, 0
 
         _begin:
         cmp ecx, n
-        je _end
-        mov ebx, dword ptr [edi]
-        add edi, 4
-        mov eax, dword ptr [esi]
-        add esi, 4
-        imul ebx
-        mov edx,0
-        add result, eax
-        adc [result+4], edx
-        adc [result + 8], 0
-        inc ecx
-        jmp _begin
-        _end:
+            je _end
+            mov ebx, dword ptr[edi]
+            
+            mov eax, dword ptr[esi]
+            
+            imul ebx
+            add edi, 4
+            add esi, 4
+            mov edx, 0
+            add [result], eax
+            adc  [result + 4], edx
+            adc  [result + 8], 0
+            inc ecx
+            jmp _begin
+            _end :
 
     }
-    std::cout << result[0];
-
-
-
-
-
-
-    //delete [] result;
 
     return 0;
 }
