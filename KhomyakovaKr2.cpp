@@ -165,6 +165,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+   
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
@@ -189,7 +190,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         switch (wParam)
         {
-        case IDC_BUTTON1:
+        case IDC_BUTTON1: {
             auto hTextBox = GetDlgItem(hDlg, IDC_EDIT1);
             auto length = SendMessage(hTextBox, WM_GETTEXTLENGTH, NULL, NULL);
             auto buffer = new wchar_t[length + 1];
@@ -200,11 +201,33 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             ListItems.push_back(s);
             HWND hwndList = GetDlgItem(hDlg, IDC_LIST4);
             SendMessage(hwndList, LB_ADDSTRING, 0,
-                (LPARAM)ListItems[ListItems.size()-1].c_str());
-            
-            
+                (LPARAM)ListItems[ListItems.size() - 1].c_str());
+
+
             UpdateWindow(hDlg);
+
         }
+            break;
+        case IDC_BUTTON2:
+        {
+            auto List = GetDlgItem(hDlg, IDC_LIST4);
+            auto Edit1 = GetDlgItem(hDlg, IDC_EDIT1);
+            auto width = SendMessage(Edit1, WM_GETTEXTLENGTH, NULL, NULL);
+            auto buffer = new wchar_t[width + 1];
+            SendMessage(Edit1, WM_GETTEXT, width + 1, (LPARAM)buffer);
+            int row = (int)SendMessage(List, LB_FINDSTRING, 0, (LPARAM)(LPSTR)buffer);
+            SendMessage(List, LB_DELETESTRING, row, 0);
+
+        }
+        break;
+        case IDC_BUTTON3:
+        {
+            auto List = GetDlgItem(hDlg, IDC_LIST4);
+            SendMessage(List, LB_RESETCONTENT, 0, 0);
+
+        }
+        }
+
     }
     return (INT_PTR)FALSE;
 }
