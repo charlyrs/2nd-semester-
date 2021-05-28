@@ -1,20 +1,18 @@
-﻿// KR2.cpp : Defines the entry point for the application.
+﻿// KhomyakovaKr2.cpp : Defines the entry point for the application.
 //
 
 #include "framework.h"
-#include "KR2.h"
-#include <string>
-#include <algorithm>
-#include <sstream>
+#include "KhomyakovaKr2.h"
+#include "vector";
+#include "string";
 
 #define MAX_LOADSTRING 100
-
-
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
-WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+WCHAR szWindowClass[MAX_LOADSTRING]; // the main window class name
+std::vector<std::wstring> ListItems;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -34,7 +32,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_KR2, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_KHOMYAKOVAKR2, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -43,7 +41,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_KR2));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_KHOMYAKOVAKR2));
 
     MSG msg;
 
@@ -78,10 +76,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_KR2));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_KHOMYAKOVAKR2));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_KR2);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_KHOMYAKOVAKR2);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -130,52 +128,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_CHAR:
-    {
-        if (wParam == 'p')
-        {
-            break;
-        }
-
-        break;
-    }
-
-    case WM_KEYDOWN:
-    {
-        if (wParam == 0x50)
-        {
-            break;
-        }
-
-        break;
-    }
-
-    case WM_LBUTTONDOWN:
-    {  
-        if (GetKeyState(VK_LCONTROL) < 0)
-        {
-            if (MessageBox(hWnd, L"Сообщение ✅", L"⛔️ Заголовок", MB_ICONERROR | MB_YESNO) == IDYES)
-            {
-                break;
-            }
-        }
-
-        POINT pt;
-        pt.x = GET_X_LPARAM(lParam);
-        pt.y = GET_Y_LPARAM(lParam);
-        break;
-    }
-
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId)
             {
-            case ID_CHANGE_SIZE_MENU:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_DIALOG1), hWnd, About);
-                break;
-
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -204,68 +162,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// 1.a
-bool IsValidNumber1a(std::wstring s)
-{
-    for (auto i = 0; i < s.size(); ++i)
-    {
-        if (!isdigit(s[i]))
-        {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-// 1.b
-bool IsValidNumber1b(std::wstring s)
-{
-    auto isValid = true;
-    for (auto i = 0; i < s.size(); ++i)
-    {
-        isValid &= isdigit(s[i]);
-    }
-
-    return isValid;
-}
-
-// 1.c
-bool IsValidNumber1c(std::wstring s)
-{
-    auto isValid = true;
-    for (auto ch : s)
-    {
-        isValid &= isdigit(ch);
-    }
-
-    return isValid;
-}
-
-// 2.
-bool IsValidNumber2(std::wstring s)
-{
-    return std::all_of(s.cbegin(), s.cend(), isdigit);
-}
-
-// 1.a
-int Parse1a(std::wstring s)
-{
-    return std::stoi(s);
-}
-
-// 3.
-bool TryParse(std::wstring s, int* a)
-{
-    std::wstringstream stream;
-    stream << s;
-    if (stream >> *a)
-    {
-        return true;
-    }
-    return false;
-}
-
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -274,50 +170,41 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_INITDIALOG:
     {
-        auto hSlider = GetDlgItem(hDlg, IDC_SIZE_SLIDER);
-        SendMessage(hSlider, TBM_SETRANGE, TRUE, MAKELPARAM(3, 12));
+        HWND hwndList = GetDlgItem(hDlg, IDC_LIST4);
+        for (int i = 0; i < ListItems.size(); i++)
+        {
+            int pos = (int)SendMessage(hwndList, LB_ADDSTRING, 0,
+                (LPARAM)ListItems[i].c_str());
+            // Set the array index of the player as item data.
+            // This enables us to retrieve the item from the array
+            // even after the items are sorted by the list box.
+            SendMessage(hwndList, LB_SETITEMDATA, pos, (LPARAM)i);
+        }
+        // Set input focus to the list box.
+        SetFocus(hwndList);
+        return TRUE;
         return (INT_PTR)TRUE;
     }
 
     case WM_COMMAND:
-        if (LOWORD(wParam) == ID_SIZE_OK)
+        switch (wParam)
         {
-            auto hSlider = GetDlgItem(hDlg, IDC_SIZE_SLIDER);
-            auto value = SendMessage(hSlider, TBM_GETPOS, TRUE, MAKELPARAM(3, 12));
-            break;
-        }
-
-        if (LOWORD(wParam) == IDOK)
-        {
-            auto hTextBox = GetDlgItem(hDlg, IDC_SIZE_EDIT);
+        case IDC_BUTTON1:
+            auto hTextBox = GetDlgItem(hDlg, IDC_EDIT1);
             auto length = SendMessage(hTextBox, WM_GETTEXTLENGTH, NULL, NULL);
             auto buffer = new wchar_t[length + 1];
-            SendMessage(hTextBox, WM_GETTEXT, length + 1, (LPARAM) buffer);
+            SendMessage(hTextBox, WM_GETTEXT, length + 1, (LPARAM)buffer);
 
             auto s = std::wstring(buffer, length);
-
-            auto isValid1 = IsValidNumber1a(s);
-            auto isValid2 = IsValidNumber2(s);
-
-            int a;
-            if (TryParse(s, &a))
-            {
-                EndDialog(hDlg, LOWORD(wParam));              
-            }
-            else
-            {
-                MessageBox(hDlg, L"Ошибка", L"", MB_ICONERROR);
-            } 
-
-            return (INT_PTR)TRUE;
-       }
-
-        if (LOWORD(wParam) == IDCANCEL)
-        {
-            EndDialog(hDlg, LOWORD(wParam));
-            return (INT_PTR)TRUE;
+            //auto list = GetDlgItem(hDlg, IDC_LIST4);
+            ListItems.push_back(s);
+            HWND hwndList = GetDlgItem(hDlg, IDC_LIST4);
+            SendMessage(hwndList, LB_ADDSTRING, 0,
+                (LPARAM)ListItems[ListItems.size()-1].c_str());
+            
+            
+            UpdateWindow(hDlg);
         }
-        break;
     }
     return (INT_PTR)FALSE;
 }
